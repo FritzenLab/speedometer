@@ -1,5 +1,10 @@
 // Variables used on this code
 
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+// Inicializa o display no endereco 0x27
+LiquidCrystal_I2C lcd(0x3F,2,1,0,4,5,6,7,3, POSITIVE);
+    
 unsigned long timet;
 unsigned long tempoativo1inicio;
 unsigned long tempoativo2inicio;
@@ -19,18 +24,25 @@ boolean enterFunction2 = true;
 boolean enterFunction3 = true;
 //-----------------------
 
-#define sensorReed 7
+#define sensorReed 2
 boolean estadoSensor= false;
 boolean estadoAnterior = false;
 int contagem = 0;
-unsigned long tempoDecorrido;
-unsigned long tempoAnterior;
+float tempoDecorrido;
+float tempoAnterior;
+
+float velocidadems;
+float velocidadekmh;
+boolean jaentrou = true;
+float distanciaVida;
 
 void setup() {
   // nothing happens in setup
+  lcd.begin (16,2);
   pinMode(sensorReed, INPUT);
   Serial.begin(9600);
   pinMode(12, OUTPUT);
+  lcd.setBacklight(HIGH);
 }
 
 void loop() {
@@ -59,6 +71,21 @@ void loop() {
         tempoDecorrido = micros() - tempoAnterior;
         estadoAnterior = false;
         contagem = contagem + 1;
+        // perimetro da roda da bicicleta aro 26: Raio x 2 x Pi
+        // Perimetro = 0,33 x 2 x 3,1415 = 2,073451
+        velocidadems= 2.073451 / (tempoDecorrido/1000000);
+        
+        //prevencao de erros de leitura
+        if (velocidadems >= 100){
+          velocidadems = 0;
+        }
+        //calculo da velocidade em km/h
+        velocidadekmh= velocidadems * 3.6;
+        //calculo da distancia total percorrida com equipamento ligado
+        distanciaVida = distanciaVida + 0.002073451;
+        // so deixa limpar o display se ele ainda nao foi limpo
+        jaentrou = false;
+                
       } else{
         
       }      
@@ -79,11 +106,27 @@ void loop() {
     // Write your second code below 
     //-----------------------
     
-    Serial.print("pulsos em 1 segundo= ");
+    // Calculo de bicicleta parada
+    if ((micros() - tempoAnterior) > 3000000) {
+          velocidadems = 0.0000;
+          velocidadekmh = 0.0000;
+          jaentrou = true;
+        }
+        
+    Serial.print("pulsos= ");
     Serial.println(contagem);
-    contagem = 0;
-    
-
+    Serial.print("tempo decorrido");
+    Serial.println(tempoDecorrido);
+          
+    lcd.setCursor(3,0);
+    lcd.print("km/h= ");
+    lcd.print(velocidadekmh,1);
+    /*lcd.setCursor(10,0);
+    lcd.print("-----");*/
+    lcd.setCursor(0,1);
+    lcd.print("Total(km)= ");
+    lcd.print(distanciaVida,2);
+    //contagem = 0;
 
 
     //-----------------------
@@ -99,9 +142,10 @@ void loop() {
        
     // Write your third code below 
     //-----------------------
+    
+   
 
-
-    PORTB ^= _BV(PB3);
+   
 
 
     
@@ -121,7 +165,7 @@ void loop() {
     enterFunction= true;
   }
 
-  if (timet - previousTime2 < 999990){ // 500,000 microsencods= 0.5 seconds delay
+  if (timet - previousTime2 < 299990){ // 500,000 microsencods= 0.5 seconds delay
       enterFunction2= false;
   } 
   else {
@@ -129,7 +173,7 @@ void loop() {
   }
   
     // The DELAY time is adjusted in the constant below >> 
-  if (timet - previousTime3 < 50000){ // 30,000 microsencods= 30 milisecond delay
+  if (timet - previousTime3 < 3999990){ // 30,000 microsencods= 30 milisecond delay
       enterFunction3= false;
   } 
   else {
