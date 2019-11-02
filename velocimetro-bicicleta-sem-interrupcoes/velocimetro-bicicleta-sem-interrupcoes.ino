@@ -76,7 +76,7 @@ void loop() {
         velocidadems= 2.073451 / (tempoDecorrido/1000000);
         
         //prevencao de erros de leitura
-        if (velocidadems >= 100){
+        if (velocidadems >= 18){
           velocidadems = 0;
         }
         //calculo da velocidade em km/h
