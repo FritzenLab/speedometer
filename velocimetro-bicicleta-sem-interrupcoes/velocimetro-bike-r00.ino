@@ -1,8 +1,12 @@
-#include <LiquidCrystal.h>
- 
-//Define os pinos que serão utilizados para ligação ao display
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
- 
+#include <TM1637TinyDisplay.h>
+#include <avr/pgmspace.h>
+
+// Define Digital Pins
+#define CLK 4
+#define DIO 5
+
+// Initialize TM1637TinyDisplay
+TM1637TinyDisplay display(CLK, DIO);
 
 unsigned long timet;
 unsigned long previousTime;
@@ -24,10 +28,9 @@ float speedKmh;
 void setup() {
   // nothing happens in setup
   pinMode(led, OUTPUT);
-  pinMode(6, INPUT);
-    //Define o número de colunas e linhas do LCD
-  lcd.begin(16, 2);
-  
+  pinMode(3, INPUT);
+  display.setBrightness(BRIGHT_7);
+    
 }
 
 void loop() {
@@ -40,7 +43,7 @@ void loop() {
     // Write your first code below 
     //-----------------------
 
-    sensorPin= digitalRead(6); // read the speed sensor
+    sensorPin= digitalRead(3); // read the speed sensor
     
     if (sensorPin == HIGH && sensorWasLow == true && hasEnteredCounting == false){ // if the sensor is HIGH/Activated, the last sensor state was LOW and has not entered the loop yet
       hasEnteredCounting = true; //makes the code enter here only once per 'lap'
@@ -81,14 +84,9 @@ void loop() {
     
 
     digitalWrite(led, !digitalRead(led));
-    lcd.clear();
-  	//Posiciona o cursor na coluna 3, linha 0;
-  	lcd.setCursor(4, 0);
-  	//Envia o texto entre aspas para o LCD
-  	lcd.print(speedKmh);
-
-
-
+    display.clear();
+    display.showNumber(speedKmh, false, 4, 0);
+    
     //-----------------------
     // End of your second code    
     }   
